@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.cadenza",
+      "sha256_cert_fingerprints": [
+        "6D:C3:2D:32:B7:F5:D6:CE:53:8F:B5:71:0E:3B:C6:AA:60:14:1E:AF:63:BE:B7:63:F7:52:E0:2A:CC:F6:3E:B6"
+      ]
+    }
+  }
+]
