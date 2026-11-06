@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Album · Cadenza</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;760&display=swap" rel="stylesheet">
+<!--
+  D100: a Cadenza album link, https://cadenzaplayer.github.io/album?id=yt:…&t=…&a=…
+  On a phone with Cadenza, Android opens the app for this address (a verified App Link) and this page never shows.
+  Anywhere else it shows the album and hands the same query to cadenza://album?…, with YouTube Music as the way to
+  hear it without Cadenza (its page when the link has a YouTube Music id, else a search).
+-->
+<style>
+  :root {
+    color-scheme: dark light;
+    --bg: oklch(0.17 0.012 255);
+    --card: oklch(0.21 0.014 255);
+    --text: oklch(0.965 0.005 255);
+    --text-off: oklch(0.7 0.012 255);
+    --line: oklch(0.32 0.014 255);
+    --accent: oklch(0.72 0.15 250);
+    --accent-ink: oklch(0.17 0.04 255);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: oklch(0.97 0.006 255);
+      --card: oklch(1 0 0);
+      --text: oklch(0.2 0.015 255);
+      --text-off: oklch(0.47 0.012 255);
+      --line: oklch(0.88 0.01 255);
+      --accent: oklch(0.52 0.17 255);
+      --accent-ink: oklch(0.985 0.005 255);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 24px 16px;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.45 Archivo, 'Segoe UI', system-ui, sans-serif;
+  }
+  main { width: 100%; max-width: 380px; text-align: center; }
+  .brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 28px; color: var(--text-off); font-weight: 600; font-size: 14px; letter-spacing: 0.02em;
+  }
+  .brand img { width: 22px; height: 22px; }
+  .cover {
+    width: 100%; aspect-ratio: 1; border-radius: 14px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--line);
+  }
+  .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover[hidden] { display: none; }
+  h1 {
+    margin: 22px 0 4px; font-size: 26px; font-weight: 760; letter-spacing: -0.022em; line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .artist { margin: 0; color: var(--text-off); font-size: 17px; overflow-wrap: anywhere; }
+  .actions { display: grid; gap: 10px; margin-top: 28px; }
+  .btn {
+    display: block; padding: 14px 18px; border-radius: 999px; text-decoration: none;
+    font-weight: 600; font-size: 16px; border: 1px solid var(--line); color: var(--text);
+  }
+  .btn--main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .hint { margin: 18px 0 0; color: var(--text-off); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="/favicon.svg" alt="">Cadenza</div>
+  <div class="cover" id="cover" hidden><img id="art" alt=""></div>
+  <h1 id="title">An album on Cadenza</h1>
+  <p class="artist" id="artist"></p>
+  <div class="actions">
+    <a class="btn btn--main" id="open" href="#">Open in Cadenza</a>
+    <a class="btn" id="yt" href="#" hidden>Listen on YouTube Music</a>
+  </div>
+  <p class="hint" id="hint">Nothing happened? Cadenza needs to be installed on this device.</p>
+</main>
+<script>
+  (function () {
+    var query = location.search.replace(/^\?/, '');
+    var p = new URLSearchParams(query);
+    var title = (p.get('t') || '').trim();
+    var artist = (p.get('a') || '').trim();
+    var id = /^yt:[A-Za-z0-9_-]{1,128}$/.test(p.get('id') || '') ? p.get('id').slice(3) : '';
+
+    if (title) {
+      document.getElementById('title').textContent = title;
+      document.title = title + (artist ? ' by ' + artist : '') + ' · Cadenza';
+    }
+    document.getElementById('artist').textContent = artist;
+    var ytLink = document.getElementById('yt');
+    if (title) {
+      ytLink.href = id
+        ? 'https://music.youtube.com/browse/' + encodeURIComponent(id)
+        : 'https://music.youtube.com/search?q=' + encodeURIComponent((artist + ' ' + title).trim());
+      ytLink.hidden = false;
+    }
+
+    var open = document.getElementById('open');
+    if (!title) {
+      open.hidden = true;
+      document.getElementById('hint').textContent = 'This link is missing the album. Ask for it to be shared again.';
+      return;
+    }
+
+    // Android's browsers open an app through an intent URL; elsewhere the cadenza:// scheme the PC app registers.
+    var android = /Android/i.test(navigator.userAgent);
+    var appUrl = android
+      // Without Cadenza the browser comes back here instead of opening the Play Store, where it isn't.
+      ? 'intent://album?' + query + '#Intent;scheme=cadenza;package=app.cadenza;S.browser_fallback_url='
+        + encodeURIComponent(location.href.split('#')[0]) + ';end'
+      : 'cadenza://album?' + query;
+    open.href = appUrl;
+
+    // One try on arrival (the browser asks before opening the app); the button is there for another.
+    if (!android) window.setTimeout(function () { location.href = appUrl; }, 300);
+  })();
+</script>
+</body>
+</html>
